@@ -79,19 +79,16 @@ function __init() {
   }
   
   // Set auto-increment values
-  drush_print("Setting auto-increment values.");
-  db_query("ALTER TABLE `authmap` AUTO_INCREMENT = %d", $authmap);
-  db_query("ALTER TABLE `comments` AUTO_INCREMENT = %d", $comments);
-  db_query("ALTER TABLE `files` AUTO_INCREMENT = %d", $files);
-  db_query("ALTER TABLE `node` AUTO_INCREMENT = %d", $node);
-  db_query("ALTER TABLE `node_revisions` AUTO_INCREMENT = %d", $node_revisions);
-  db_query("ALTER TABLE `profile_fields` AUTO_INCREMENT = %d", $profile_fields);
-  db_query("ALTER TABLE `role` AUTO_INCREMENT = %d", $role);
-  db_query("ALTER TABLE `term_data` AUTO_INCREMENT = %d", $term_data);
-  db_query("ALTER TABLE `url_alias` AUTO_INCREMENT = %d", $url_alias);
-  db_query("ALTER TABLE `users` AUTO_INCREMENT = %d", $users);
-  db_query("ALTER TABLE `vocabulary` AUTO_INCREMENT = %d", $vocabulary);
-  
+  $tables = array('authmap', 'comments', 'files', 'node', 'node_revisions', 
+    'profile_fields', 'role', 'term_data', 'url_alias', 'users', 'vocabulary');
+    
+  foreach($tables as $table) {
+    $value = $$table;
+    db_query("ALTER TABLE `{$table}` AUTO_INCREMENT = %d", $value);
+    drush_print("Set auto-increment value for {$table} to {$value}");
+  }
+  unset($value);  
+    
   drush_print("Initialization done!");
 }
 
@@ -106,69 +103,91 @@ function __import() {
 
   // authmap
   db_query("REPLACE INTO {authmap} SELECT a.* FROM `{$sourcedb}`.authmap a WHERE a.aid < %d", $authmap);
+  drush_print("Imported data into authmap. Affected rows: " . db_affected_rows());
   
   // comments
   db_query("REPLACE INTO {comments} SELECT `cid`, `pid`, `nid`, `uid`, `subject`, `comment`, `hostname`, `timestamp`, `status`, `format`, `thread`, `name`, `mail`, `homepage` FROM `{$sourcedb}`.comments c WHERE c.cid < %d", $comments);
-
+  drush_print("Imported data into comments. Affected rows: " . db_affected_rows());
+  
   // files
   db_query("REPLACE INTO {files} SELECT f.`fid`, n.`uid`, f.`filename`, f.`filepath`, f.`filemime`, f.`filesize`, n.`status`, n.`created` FROM `{$sourcedb}`.files f, `{$sourcedb}`.node n WHERE f.fid < %d AND n.nid < %d AND f.nid = n.nid", $files, $node);
-
+  drush_print("Imported data into files. Affected rows: " . db_affected_rows());
+  
   // node
   db_query("REPLACE INTO {node} SELECT `nid`, `vid`, `type`, 'en', `title`, `uid`, `status`, `created`, `changed`, `comment`, `promote`, `moderate`, `sticky`, 0, 0 FROM `{$sourcedb}`.node n WHERE n.nid < %d", $node);
+  drush_print("Imported data into node. Affected rows: " . db_affected_rows());
 
   // node_access
   db_query("REPLACE INTO {node_access} SELECT n.* FROM `{$sourcedb}`.node_access n WHERE n.nid < %d", $node);
+  drush_print("Imported data into node_access. Affected rows: " . db_affected_rows());
 
   // node_comment_statistics
   db_query("REPLACE INTO {node_comment_statistics} SELECT n.* FROM `{$sourcedb}`.node_comment_statistics n WHERE n.nid < %d", $node);
+  drush_print("Imported data into node_comment_statistics. Affected rows: " . db_affected_rows());
 
   // node_counter
   db_query("REPLACE INTO {node_counter} SELECT n.* FROM `{$sourcedb}`.node_counter n WHERE n.nid < %d", $node);
+  drush_print("Imported data into node_counter. Affected rows: " . db_affected_rows());
 
   // node_revisions
   db_query("REPLACE INTO {node_revisions} SELECT `nid`, `vid`, `uid`, `title`, `body`, `teaser`, `log`, `timestamp`, `format` FROM `{$sourcedb}`.node_revisions n WHERE n.vid < %d", $node_revisions);
+  drush_print("Imported data into node_revisions. Affected rows: " . db_affected_rows());
 
   // node_type
   db_query("REPLACE INTO {node_type} SELECT n.* FROM `{$sourcedb}`.node_type n");
+  drush_print("Imported data into node_type. Affected rows: " . db_affected_rows());
 
   // profile_fields
   db_query("REPLACE INTO {profile_fields} SELECT f.* FROM `{$sourcedb}`.profile_fields f WHERE f.fid < %d", $profile_fields);
+  drush_print("Imported data into profile_fields. Affected rows: " . db_affected_rows());
 
   // profile_values
   db_query("REPLACE INTO {profile_values} SELECT p.* FROM `{$sourcedb}`.profile_values p WHERE p.uid < %d AND p.fid < %d AND p.uid > 1", $users, $profile_fields);
+  drush_print("Imported data into profile_values. Affected rows: " . db_affected_rows());
 
   // role
   db_query("REPLACE INTO {role} SELECT r.* FROM `{$sourcedb}`.role r WHERE r.rid < %d", $role);
+  drush_print("Imported data into role. Affected rows: " . db_affected_rows());
 
   // term_data
   db_query("REPLACE INTO {term_data} SELECT t.* FROM `{$sourcedb}`.term_data t WHERE t.tid < %d", $term_data);
+  drush_print("Imported data into term_data. Affected rows: " . db_affected_rows());
 
   // term_hierarchy
   db_query("REPLACE INTO {term_hierarchy} SELECT t.* FROM `{$sourcedb}`.term_hierarchy t WHERE t.tid < %d", $term_data);
+  drush_print("Imported data into term_hierarchy. Affected rows: " . db_affected_rows());
 
   // term_node
   db_query("REPLACE INTO {term_node} SELECT t.`nid`, n.`vid`, t.`tid` FROM `{$sourcedb}`.term_node t, `{$sourcedb}`.node n WHERE t.tid < %d AND n.nid < %d AND t.nid = n.nid", $term_data, $node);
+  drush_print("Imported data into term_node.Affected rows: " . db_affected_rows());
 
   // term_relation
   db_query("REPLACE INTO {term_relation} SELECT '', t.`tid1`, t.`tid2` FROM `{$sourcedb}`.term_relation t WHERE t.tid1 < %d AND t.tid2 < %d", $term_data, $term_data);
+  drush_print("Imported data into term_relation. Affected rows: " . db_affected_rows());
 
   // term_synonym
   db_query("INSERT IGNORE INTO {term_synonym} SELECT '', t.`tid`, t.`name` FROM `{$sourcedb}`.term_synonym t WHERE t.tid < %d", $term_data);
+  drush_print("Imported data into term_synonym. Affected rows: " . db_affected_rows());
 
   // url_alias
   db_query("REPLACE INTO {url_alias} SELECT pid, src, dst, '' FROM `{$sourcedb}`.url_alias u WHERE u.pid < %d", $url_alias);
+  drush_print("Imported data into url_alias. Affected rows: " . db_affected_rows());
 
   // users
   db_query("REPLACE INTO {users} SELECT `uid`, `name`, `pass`, `mail`, `mode`, `sort`, `threshold`, `theme`, `signature`, 0, `created`, `access`, `login`, `status`, `timezone`, `language`, `picture`, `init`, `data` FROM `{$sourcedb}`.users u WHERE u.uid < %d AND u.uid > 1", $users);
+  drush_print("Imported data into users.Affected rows: " . db_affected_rows());
 
   // user_roles
   db_query("REPLACE INTO {users_roles} SELECT u.* FROM `{$sourcedb}`.users_roles u WHERE u.uid < %d AND u.rid < %d", $users, $role);
+  drush_print("Imported data into users_roles. Affected rows: " . db_affected_rows());
 
   // vocabulary
   db_query("REPLACE INTO {vocabulary} SELECT `vid`, `name`, `description`, `help`, `relations`, `hierarchy`, `multiple`, `required`, `tags`, `module`, `weight` FROM `{$sourcedb}`.vocabulary v WHERE v.vid < %d", $vocabulary);
+  drush_print("Imported data into vocabulary. Affected rows: " . db_affected_rows());
 
   // vocabulary_node_types
   db_query("REPLACE INTO {vocabulary_node_types} SELECT * FROM `{$sourcedb}`.vocabulary_node_types v WHERE v.vid < %d", $vocabulary);
+  drush_print("Imported data into vocabulary_node_types.Affected rows: " . db_affected_rows());
   
   drush_print("Import done!");
 }
@@ -186,12 +205,15 @@ function __process() {
   extract(__config());
 
   // Append underscore to emails to prevent rogue emails from going out
+  drush_print("Appending underscores to email addresses.");
   db_query("UPDATE {users} SET mail = CONCAT(mail, '_') WHERE uid > 1");
 
   // Enable comments for profile nodes
+  drush_print("Enable comments for profile nodes.");
   db_query("UPDATE node SET comment = 2 WHERE type = 'profile';");
   
   // Remove wbr_callout nodes, these are no longer used on the new site
+  drush_print("Remove wbr_callout nodes.");
   $rs = db_query("SELECT nid FROM node WHERE type = 'wbr_callout'");
   while($row = db_fetch_object($rs)) {
     // We use a custom function that wraps the core node_delete.
@@ -200,12 +222,14 @@ function __process() {
   }
   
   // Delete one image.  The nid was determined by examining the node table.
+  drush_print("Delete image node (nid:39).");
   my_node_delete(39);
   
   // Delete two featured_video nodes. The first attempt failed due to a bug in the location module.  
   // Thus, we temporarily disable that module to perform the deletion.  The call to 
   // module_list(TRUE) is necessary so that the internal module list gets rebuilt.
   // Refer to http://api.drupal.org, especially when encountering situations like this.
+  drush_print("Delete featured_video nodes (nid:1041,1050).");
   db_query("UPDATE {system} SET status = 0 WHERE name = 'location' AND type = 'module'");
   module_list(TRUE);
   my_node_delete(1041);
@@ -214,17 +238,28 @@ function __process() {
   module_list(TRUE);
   
   // Delete imported blog node
+  drush_print("Delete blog node (nid:25).");
   my_node_delete(25);
   
   // Populate content_type_news table for news nodes
+  drush_print("Import data into content_type_news.");
   db_query("INSERT IGNORE INTO content_type_news (vid, nid) SELECT vid, nid FROM node WHERE type = 'news'");
   
   // Delete imported video nodes
+  drush_print("Delete video nodes.");
   $rs = db_query("SELECT nid FROM node WHERE type = 'video' AND nid < 10000");
   while ($row = db_fetch_object($rs)) {
     my_node_delete($row->nid);
     drush_print("Deleted node {$row->nid}");
-  }  
+  }
+  
+  // Delete unused node_types
+  drush_print("Delete unusued node types.");
+  node_type_delete('wbr_callout');
+  node_type_delete('featured_video');
+  node_type_delete('image');
+  node_type_delete('general_image');
+  node_type_delete('tour_appearance');  
 }
 
 /**

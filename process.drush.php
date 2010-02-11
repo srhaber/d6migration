@@ -105,7 +105,7 @@ function __process() {
   while ($row = db_fetch_object($rs)) {
     my_node_delete($row->nid);
     drush_print("Deleted node {$row->nid}");
-  }  
+  }
 }
 
 /**
