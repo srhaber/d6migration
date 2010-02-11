@@ -12,23 +12,32 @@ include 'includes/custom.inc';
 // Wrap code in function to prevent from clobbering global namespace.
 __main();
 
+/**
+ * A simple engine to run a specific function during processing.
+ *
+ * A function name (minus the two underscores) may be passed as an argument
+ * to the drush script.  If no argument is given, the script will default to 
+ * the __process() function.
+ *
+ * Don't place underscores when passing an argument.
+ * Examples:
+ *  drush -l <url> script process.drush.php           # CORRECT, invoke __process()
+ *  drush -l <url> script process.drush.php process   # CORRECT, invoke __process()
+ *  drush -l <url> script process.drush.php nodemap   # CORRECT, invoke __nodemap()
+ *  drush -l <url> script process.drush.php __nodemap   # INCORRECT, won't invoke __nodemap()
+ *
+ * If no function exists, a usage message is displayed and the script terminates without
+ * invoking any function.
+ */
 function __main() {
   $args = $_SERVER['argv'];
+  $cmd = $args[count($args) - 1];
   
-  // Ignore if user invoked using php command
-  if ($_SERVER['argv'][0] === 'php' || $_SERVER['argv'][0] === 'php5') {
-    array_shift($args);
+  if ($cmd == basename(__FILE__)) {
+    __process();
   }
-  
-  // Check for legal parameter count
-  if (count($args) != 2) {
-    __printusage();
-  }
-
-  // Run the invoked command
-  $command = $args[1];
-  $func = '__' . $command;
-  if (function_exists($func)) {
+  elseif (function_exists('__' . $cmd)) {
+    $func = '__' . $cmd;
     $func();
   }
   else {
@@ -37,7 +46,19 @@ function __main() {
 }
 
 /**
- * Sample process function taken from veronicas6 migration.  It may be
+ * Display usage message to the screen.
+ */
+function __printusage() {
+  echo "Usage: drush -l <url> script " . basename(__FILE__) . " [command]\n";
+  echo "Commands:\n";
+  echo "  process - The default process command to run.\n";
+  echo "  <user defined> - Other user defined functions, ignore the prepending underscores.\n\n";
+}
+
+/**
+ * Default function to process imported content.
+ *
+ * These samples were taken from the veronicas6 migration from Drupal 5 to 6.  It may be
  * helpful to break some of these into smaller arbitrary functions, especially 
  * for any time or memory intensive operations.
  */
@@ -176,8 +197,7 @@ function __tour() {
  *
  * All general_images nodes on the old site will become standard photo nodes
  * on the new site.  All physical files are preserved when we migrate sites,
- * so the filepaths stay the same.  It may be common to adjust new taxonomy
- * terms to newly imported and converted nodes.
+ * so the filepaths stay the same.
  */
 function __photo() {
   // Bring config vars into function namespace  
@@ -215,7 +235,13 @@ function __photo() {
   }  
 }
 
-// Fix taxonomy for photos
+/**
+ * Fix taxonomy for photos
+ *
+ * It is often necessary to map new taxonomy terms to imported objects. Here, we
+ * are assigning correct terms to newly converted photo nodes so they will appear
+ * in the site's photo gallery.
+ */
 function __photostax() {
   // Replace old term IDs with new equivalends
   db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 123, 8);
