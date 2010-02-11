@@ -1,2 +1,60 @@
-Rename process.drush.php to process-sample.drush.php.
+CONTENTS OF THIS FILE
+---------------------
 
+ * Introduction
+ * Requirements
+ * Setup
+ * More Information
+
+INTRODUCTION
+------------
+
+Current Maintainer: Shaun Haber <shaun.haber@wmg.com>
+
+This directory contains necessary script files to export content from a Drupal 5
+database and import it into a Drupal 6 site. The migration phase is generally
+broken into 3 separate steps: initializing, importing, and processing.
+
+The initialization phase should only happen once, but the importing and
+processing phases may be run multiple times. It is advisable to do a preliminary
+migration during site development to test for integration bugs, and to do a
+final migration in the moments before a site relaunch.
+
+REQUIREMENTS
+------------
+
+ * This script requires Drush. Drush is installed on our development and
+   production servers. Our development server is wbrlabs.com. Our production
+   server is mgmt1.p.wbrdc.com. To learn more about Drush, visit
+   http://drupal.org/project/drush
+
+ * Before the preliminary migration, a snapshot of the production site database
+   needs to be setup on the dev server with the same db access credentials as
+   the dev site.
+
+ * Before the site launch, the production site must be put in a frozen state or
+   be taken offline. At this time, a snapshot of the production database should
+   be setup on the dev server with the same db access credentials as the dev
+   site.
+
+SETUP
+-----
+
+1. COPY THE SCRIPT FILES TO A SPECIFIED LOCATION.
+
+   Do not edit the versioned files directly, unless you plan to permanently
+   change the migration script in the repository. Copy or svn export these files
+   to a new location.  A good candidate is the site project directory:
+
+	   svn export http://svn.warnerreprise.com/projects/contentmig \
+	   path/to/sites/site/contentmig
+	
+2. SETUP SNAPSHOT OF PRODUCTION SITE DATABASE
+
+3. EDIT CONFIG FILE WITH AUTO-INCREMENT VALUES
+
+	
+MORE INFORMATION
+----------------
+
+Documentation is available at https://docs.01detail.com/node/2026
