@@ -48,14 +48,42 @@ function __process() {
   // Append underscore to emails to prevent rogue emails from going out
   db_query("UPDATE {users} SET mail = CONCAT(mail, '_') WHERE uid > 1");
 
-  // Enable comment for profile nodes
+  // Enable comments for profile nodes
   db_query("UPDATE node SET comment = 2 WHERE type = 'profile';");
   
-  // Remove wbr_callout nodes
+  // Remove wbr_callout nodes, these are no longer used on the new site
   $rs = db_query("SELECT nid FROM node WHERE type = 'wbr_callout'");
   while($row = db_fetch_object($rs)) {
+    // We use a custom function that wraps the core node_delete.
     my_node_delete($row->nid);
     drush_print("Delete node {$row->nid}");
+  }
+  
+  // Delete one image.  The nid was determined by examining the node table.
+  my_node_delete(39);
+  
+  // Delete two featured_video nodes. The first attempt failed due to a bug in the location module.  
+  // Thus, we temporarily disable that module to perform the deletion.  The call to 
+  // module_list(TRUE) is necessary so that the internal module list gets rebuilt.
+  // Refer to http://api.drupal.org, especially when encountering situations like this.
+  db_query("UPDATE {system} SET status = 0 WHERE name = 'location' AND type = 'module'");
+  module_list(TRUE);
+  my_node_delete(1041);
+  my_node_delete(1050);
+  db_query("UPDATE {system} SET status = 1 WHERE name = 'location' AND type = 'module'");
+  module_list(TRUE);
+  
+  // Delete imported blog node
+  my_node_delete(25);
+  
+  // Populate content_type_news table for news nodes
+  db_query("INSERT IGNORE INTO content_type_news (vid, nid) SELECT vid, nid FROM node WHERE type = 'news'");
+  
+  // Delete imported video nodes
+  $rs = db_query("SELECT nid FROM node WHERE type = 'video' AND nid < 10000");
+  while ($row = db_fetch_object($rs)) {
+    my_node_delete($row->nid);
+    drush_print("Deleted node {$row->nid}");
   }  
 }
 
@@ -141,4 +169,76 @@ function __tour() {
     $set_clause = implode(", ", $sql_fields); 
     db_query("INSERT IGNORE INTO {content_type_show} SET " . $set_clause);
   }  
+}
+
+/**
+ * Convert general_image nodes to photo nodes.
+ *
+ * All general_images nodes on the old site will become standard photo nodes
+ * on the new site.  All physical files are preserved when we migrate sites,
+ * so the filepaths stay the same.  It may be common to adjust new taxonomy
+ * terms to newly imported and converted nodes.
+ */
+function __photo() {
+  // Bring config vars into function namespace  
+  extract(__config());  
+
+  // Change all general_image nodes to photo nodes
+  db_query("UPDATE {node} SET type = 'photo' WHERE type='general_image'");
+  
+  // Set default values for mapping the data in content_type_photo.
+  $fields = array(
+    'vid' => '',
+    'nid' => '',
+    'field_photo_image_fid' => '',
+    'field_photo_image_list' => '',
+    'field_photo_image_data' => '',
+    );
+
+  // Map the data for each general_image node into photo node, one at a time.
+  $rs = db_query("SELECT * FROM `{$sourcedb}`.`content_type_general_image`");
+  while ($row = db_fetch_object($rs)) {
+    $fields['vid'] = $row->vid;
+    $fields['nid'] = $row->nid;
+    $fields['field_photo_image_fid'] = $row->field_general_image_fid;
+    $fields['field_photo_image_list'] = 0; 
+    $fields['field_photo_image_data'] = serialize(array('alt' => $row->field_general_image_alt, 'title' => $row->field_general_image_title));
+
+    // Build and execute the query
+    $sql_fields = array();
+    foreach($fields as $field => $value) {
+      $value = mysql_real_escape_string($value);
+      $sql_fields[] = "`{$field}` = '{$value}'";
+    }
+    $set_clause = implode(", ", $sql_fields);
+    db_query("INSERT IGNORE INTO {content_type_photo} SET " . $set_clause);    
+  }  
+}
+
+// Fix taxonomy for photos
+function __photostax() {
+  // Replace old term IDs with new equivalends
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 123, 8);
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 124, 7);
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 120, 3);
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 121, 4);
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 122, 6);
+  db_query("UPDATE {term_node} SET `tid` = %d WHERE `tid` = %d", 126, 5);
+  
+  // Add Official or Fan terms
+  $rs = db_query("SELECT nid, vid FROM {node} WHERE type = 'photo' AND nid < 10000");
+  while ($row = db_fetch_object($rs)) {
+    $nid = $row->nid;
+    $vid = $row->vid;
+    $tid = db_result(db_query("SELECT tid FROM {term_node} WHERE vid = %d", $vid));
+    // Remove record from bad insert on previous run
+    db_query("DELETE FROM {term_node} WHERE vid = %d AND tid = %d", $vid, 100);
+        
+    if ($tid === 126) { // Fan term
+      db_query("INSERT INTO {term_node} VALUES(%d, %d, %d)", $nid, $vid, 102);      
+    }
+    else {  // Official term
+      db_query("INSERT INTO {term_node} VALUES(%d, %d, %d)", $nid, $vid, 100);           
+    }
+  }
 }
