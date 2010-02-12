@@ -35,4 +35,5 @@ function __process() {
  */
 function __process_1() {
   // Add code here
+  drush_print('Hello world!');
 }
