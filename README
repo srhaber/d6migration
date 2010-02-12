@@ -6,6 +6,7 @@ CONTENTS OF THIS FILE
  * Files
  * Setup
  * Performing the Migration
+ * Miscellaneous
  * More Information
 
 INTRODUCTION
@@ -144,7 +145,7 @@ migration. The basic procedure for performing a migration goes:
 
      drush -l <site-moniker>.wbrdev.com script import.drush.php import
 
-3. RUN ALL PROCESSING COMMANDS FROM THE DRUSH SCRIPT
+3. RUN ALL PROCESS COMMANDS FROM THE DRUSH SCRIPT
 
    There will always be additional actions to perform on the imported content. A
    typical example is to append underscores to all user email addresses has a
@@ -155,11 +156,12 @@ migration. The basic procedure for performing a migration goes:
 		 ...
 		 drush -l <site-moniker>.wbrdev.com script import.drush.php process_N
 		
-   In the above example, there are multiple process functions. There is no
-   naming convention for these functions, so it's up to you how to name them.
-   See the process-example.inc file for a real example.
+   In the above example, there are multiple process commands. There is no naming
+   convention for these, so it's up to you how to name them. All command names
+   correspond to identical function names that have 2 prepended underscores. See
+   the process-example.inc file.
 
-4. CAPTURE ALL NEW ACTIONS PERFORMED ON THE IMPORTED DATA AS CODE
+4. WRITE CODE FOR ACTIONS ON IMPORTED DATA
 
    It is absolutely essential to capture any changes as code and encapsulate
    them in a function. The idea here to make everything repeatable so you can
@@ -172,7 +174,14 @@ migration. The basic procedure for performing a migration goes:
    each function you add. Function names should begin with 2 underscores. See
    the process-example.inc file.
 
-	
+MISCELLANEOUS
+-------------
+
+The physical files for the production site should be preserved and copied to the new site during launch.
+
+	cd /NAS1/websites/drupal6x/sites/<newsite>
+  cp -pR /NAS1/websites/drupal5x/sites/<oldsite>/files/* files/
+  	
 MORE INFORMATION
 ----------------
 
