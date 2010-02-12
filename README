@@ -5,6 +5,7 @@ CONTENTS OF THIS FILE
  * Requirements
  * Files
  * Setup
+ * Performing the Migration
  * More Information
 
 INTRODUCTION
@@ -44,15 +45,37 @@ FILES
 An overview of the files contained in this directory:
 
   * config.ini - The configuration file in ini format.
-  * config.inc - Code to parse the configuration file.
-  * import.drush.php - The main script, invoked using the drush script command
-  * process-sample.inc - 
 
+  * config.inc - Code to parse the configuration file.
+
+  * import.drush.php - The main script, invoked using the drush script command
+
+  * process-example.inc - A example processing script to give an idea of the
+    processing phase.
+
+  * process.inc - The placeholder processing script where you edit and
+    accumulate the post-import actions.
+
+  * README - This file.
 
 SETUP
 -----
 
-1. COPY THE SCRIPT FILES TO A SPECIFIED LOCATION.
+1. PROVISION THE NEW DEV SITE
+
+   Setting up the new dev site should be the first thing that happens.
+   Currently, this is done via a shell script on wbrlabs:
+
+	   /home/wbrlabs/drupal6x/sites/mknew.sh <site-moniker>
+	
+	 This script will take care of most things including creating a project
+   directory in Subversion, creating the dev database, and adding symbolic links
+   to the dev environment.
+
+   To finish the installation, visit:
+   http://<site-moniker>.wbrdev.com/install.php.
+
+2. COPY THE SCRIPT FILES TO A SPECIFIED LOCATION
 
    Do not edit the versioned files directly, unless you plan to permanently
    change the migration script in the repository. Copy or svn export these files
@@ -61,7 +84,7 @@ SETUP
 	   svn export http://svn.warnerreprise.com/projects/contentmig \
 	   path/to/sites/site/contentmig
 	
-2. SETUP SNAPSHOT OF PRODUCTION SITE DATABASE
+3. SETUP SNAPSHOT OF PRODUCTION SITE DATABASE
 	
    Create a new database on the dev server. Perform a mysqldump of the
    production site and import it into the new dev database. If this is the final
@@ -79,7 +102,7 @@ SETUP
 		 mysql prod_database < prod_database.sql
 		 rm prod_database.sql # Clean up
 
-3. EDIT CONFIG FILE WITH AUTO-INCREMENT VALUES
+4. EDIT CONFIG FILE WITH AUTO-INCREMENT VALUES
 
    Examine the production database snapshot and determine the auto-increment
    values for each table listed in the config.ini file. Consider the current
@@ -94,6 +117,60 @@ SETUP
    Additionally, enter the database name of the production snapshot DB. The
    script assumes it can use the dev site's DB credentials to access this DB, so
    be sure those are set on the dev server.
+
+5. INITIALIZE THE DEV SITE
+
+   Initialize the dev site by running drush.
+
+     drush -l <site-moniker>.wbrdev.com script import.drush.php init
+
+   This should be done soon after provisioning the site and before any content
+   is input into the site.  This step should only be performed once.
+
+PERFORMING THE MIGRATION
+------------------------
+
+After following the steps in the setup phase, you will be ready to perform a
+migration. The basic procedure for performing a migration goes:
+
+1. COPY THE PRODUCTION DATABASE TO THE DEV SERVER
+
+   This is the same as STEP 3 in the setup phase.
+
+2. RUN THE IMPORT COMMAND FROM THE DRUSH SCRIPT
+
+   The import command inserts or replaces data for the most common Drupal
+   tables. The corresponding function is __import().
+
+     drush -l <site-moniker>.wbrdev.com script import.drush.php import
+
+3. RUN ALL PROCESSING COMMANDS FROM THE DRUSH SCRIPT
+
+   There will always be additional actions to perform on the imported content. A
+   typical example is to append underscores to all user email addresses has a
+   clever way to prevent rogue emails being sent from the dev server.
+
+		 drush -l <site-moniker>.wbrdev.com script import.drush.php process
+		 drush -l <site-moniker>.wbrdev.com script import.drush.php process_1
+		 ...
+		 drush -l <site-moniker>.wbrdev.com script import.drush.php process_N
+		
+   In the above example, there are multiple process functions. There is no
+   naming convention for these functions, so it's up to you how to name them.
+   See the process-example.inc file for a real example.
+
+4. CAPTURE ALL NEW ACTIONS PERFORMED ON THE IMPORTED DATA AS CODE
+
+   It is absolutely essential to capture any changes as code and encapsulate
+   them in a function. The idea here to make everything repeatable so you can
+   easily replay the changes when you perform another migration. Failure to do
+   so means any changes will be lost when it comes time to do the final sync.
+   
+   You will gradually add code to the process.inc file as needed. You can choose
+   to put all code in the single __process() function, or you may break it up
+   into smaller meaningful functions. You'll need to run the drush script for
+   each function you add. Function names should begin with 2 underscores. See
+   the process-example.inc file.
 
 	
 MORE INFORMATION
