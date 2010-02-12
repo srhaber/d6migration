@@ -17,8 +17,8 @@ broken into 3 separate steps: initializing, importing, and processing.
 
 The initialization phase should only happen once, but the importing and
 processing phases may be run multiple times. It is advisable to do a preliminary
-migration during site development to test for integration bugs, and to do a
-final migration in the moments before a site relaunch.
+run during site development to test for integration bugs, and to do a final
+migration in the moments before a site relaunch.
 
 REQUIREMENTS
 ------------
@@ -50,8 +50,38 @@ SETUP
 	   path/to/sites/site/contentmig
 	
 2. SETUP SNAPSHOT OF PRODUCTION SITE DATABASE
+	
+   Create a new database on the dev server. Perform a mysqldump of the
+   production site and import it into the new dev database. If this is the final
+   migration, be sure to put the production site in a frozen site or maintenance
+   mode beforehand. Example below:
+
+		 # On production server
+		 mysqldump prod_database | gzip > prod_database.sql.gz
+		 scp prod_database.sql.gz wbrlabs@wbrlabs.com: # scp file to dev server
+		 rm prod_database.sql.gz # Clean up
+		
+		 # On dev server
+		 mysqladmin create prod_database
+		 gunzip prod_database.sql.gz
+		 mysql prod_database < prod_database.sql
+		 rm prod_database.sql # Clean up
 
 3. EDIT CONFIG FILE WITH AUTO-INCREMENT VALUES
+
+   Examine the production database snapshot and determine the auto-increment
+   values for each table listed in the config.ini file. Consider the current
+   site's age, acceleration of produced content, and the estimated date of
+   launch of the new site in order to gauge appropriate values.
+
+   Don't be afraid to add plenty of padding. The whole purpose of this is to
+   prevent from encountering conflicts on sequenced IDs (they are a huge huge
+   pain). You only get one chance to get this right, so be conservative and bump
+   the number as high as you see fit.
+
+   Additionally, enter the database name of the production snapshot DB. The
+   script assumes it can use the dev site's DB credentials to access this DB, so
+   be sure those are set on the dev server.
 
 	
 MORE INFORMATION
