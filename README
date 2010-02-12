@@ -3,6 +3,7 @@ CONTENTS OF THIS FILE
 
  * Introduction
  * Requirements
+ * Files
  * Setup
  * More Information
 
@@ -36,6 +37,17 @@ REQUIREMENTS
    be taken offline. At this time, a snapshot of the production database should
    be setup on the dev server with the same db access credentials as the dev
    site.
+
+FILES
+-----
+
+An overview of the files contained in this directory:
+
+  * config.ini - The configuration file in ini format.
+  * config.inc - Code to parse the configuration file.
+  * import.drush.php - The main script, invoked using the drush script command
+  * process-sample.inc - 
+
 
 SETUP
 -----

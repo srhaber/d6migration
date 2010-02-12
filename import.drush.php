@@ -5,8 +5,8 @@
  * Drush script that handles all content migration code.
  */
  
-include $_SERVER['PWD'] . '/config.php';
-include $_SERVER['PWD'] . '/process.php';
+include $_SERVER['PWD'] . '/config.inc';
+include $_SERVER['PWD'] . '/process.inc';
 
 // Wrap code in function to prevent from clobbering global namespace.
 __main();
