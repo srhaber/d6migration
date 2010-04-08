@@ -20,9 +20,9 @@ __main();
  *
  * Don't place underscores when passing an argument.
  * Examples:
- *  drush -l <url> script import.drush.php init        # CORRECT, invoke __init()
- *  drush -l <url> script import.drush.php import      # CORRECT, invoke __import()
- *  drush -l <url> script import.drush.php __process   # INCORRECT, won't invoke __process()
+ *  drush -l <url> php-script import.drush.php init        # CORRECT, invoke __init()
+ *  drush -l <url> php-script import.drush.php import      # CORRECT, invoke __import()
+ *  drush -l <url> php-script import.drush.php __process   # INCORRECT, won't invoke __process()
  *
  * If no function exists, a usage message is displayed and the script terminates without
  * invoking any function.

@@ -30,7 +30,7 @@ function __process() {
  *
  * Feel free to use this function ore rename it to something else.
  * Example usage in drush script:
- *   drush -l <url> script import.drush.php process_1
+ *   drush -l <url> php-script import.drush.php process_1
  *
  */
 function __process_1() {

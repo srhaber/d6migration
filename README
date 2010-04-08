@@ -49,7 +49,7 @@ An overview of the files contained in this directory:
 
   * config.inc - Code to parse the configuration file.
 
-  * import.drush.php - The main script, invoked using the drush script command
+  * import.drush.php - The main script, invoked using the drush php-script command
 
   * process-example.inc - A example script to give an idea of the process phase.
 
@@ -121,7 +121,7 @@ SETUP
 
    Initialize the dev site by running drush.
 
-     drush -l <site-moniker>.wbrdev.com script import.drush.php init
+     drush -l <site-moniker>.wbrdev.com php-script import.drush.php init
 
    This should be done soon after provisioning the site and before any content
    is input into the site. This step should only be performed once. Make sure
@@ -142,7 +142,7 @@ migration. The basic procedure goes:
    The import command inserts or replaces data for the most common Drupal
    tables. See the corresponding __import() function.
 
-     drush -l <site-moniker>.wbrdev.com script import.drush.php import
+     drush -l <site-moniker>.wbrdev.com php-script import.drush.php import
 
 3. RUN ALL PROCESS COMMANDS FROM THE DRUSH SCRIPT
 
@@ -150,10 +150,10 @@ migration. The basic procedure goes:
    A typical example is to append underscores to all user email addresses has a
    clever way to prevent rogue emails being sent from the dev server.
 
-		 drush -l <site-moniker>.wbrdev.com script import.drush.php process
-		 drush -l <site-moniker>.wbrdev.com script import.drush.php process_1
+		 drush -l <site-moniker>.wbrdev.com php-script import.drush.php process
+		 drush -l <site-moniker>.wbrdev.com php-script import.drush.php process_1
 		 ...
-		 drush -l <site-moniker>.wbrdev.com script import.drush.php process_N
+		 drush -l <site-moniker>.wbrdev.com php-script import.drush.php process_N
 		
    In the above example, there are multiple process commands. There is no naming
    convention for these, so it's up to you how to name them. All command names
@@ -169,7 +169,7 @@ migration. The basic procedure goes:
    
    You will gradually add code to the process.inc file as needed. You can choose
    to put all code in the single __process() function, or you may break it up
-   into smaller meaningful functions. You'll need to run the drush script for
+   into smaller meaningful functions. You'll need to run the drush php-script for
    each function you add. Function names should begin with 2 underscores. See
    the process-example.inc file.
 
