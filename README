@@ -77,12 +77,9 @@ SETUP
 
 2. COPY THE SCRIPT FILES TO A SPECIFIED LOCATION
 
-   Do not edit the versioned files directly, unless you plan to permanently
-   change the migration script in the repository. Copy or svn export these files
-   to a new location.  A good candidate is the site project directory:
+   Place these files inside your site directory:
 
-	   svn export http://svn.warnerreprise.com/projects/contentmig \
-	   /home/wbrlabs/drupal6x/sites/<newsite>/migrate
+	   E.g., /home/wbrlabs/drupal6x/sites/<newsite>/d6migration
 	
 3. SETUP SNAPSHOT OF PRODUCTION SITE DATABASE
 	
