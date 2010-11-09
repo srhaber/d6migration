@@ -5,7 +5,7 @@
  * All post-import processing code goes here.
  */
 
-include 'includes/custom.inc';
+include 'custom.inc';
 
 /**
  * Default function to process imported content.
